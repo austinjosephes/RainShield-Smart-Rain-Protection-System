@@ -1,69 +1,82 @@
-# RainShield-Smart-Rain-Protection-System
+# RainShield: Automatic Rain-Safe Clothes Rack
 
-```markdown
-# RainShield – Smart Rain Protection System 🌧️
+Anyone who has dried laundry outdoors knows the feeling: you step out for an hour, a cloud rolls in, and everything is soaked. RainShield is my fix. It is an ESP32-controlled clothes rack that retracts itself under cover when rain is detected and slides back out once the weather clears.
 
-## 🪴 Why I built this
+---
 
-I built RainShield because I wanted to solve a simple everyday problem: clothes drying outside can get completely wet when unexpected rain arrives. My idea was to create a smart cloth rack that automatically folds inside when rain is detected. I used an ESP32, a rain sensor, and a servo motor to make it happen. Here's how I put everything together.
+## Overview
 
-## 🌀 What it actually does
+A standard extendable drying rack is driven by an MG90S servo. The ESP32 decides when to pull the rack in or push it out, based on one of three control modes you can switch between from your phone.
 
-Imagine a normal extended cloth rack with clothes hanging on it. When rain starts, the MG90S servo moves the mechanism and pulls the rack inside to a sheltered position. When conditions become safe again, it can extend back outside.
+| Mode | How it decides |
+|---|---|
+| **Sensor** | Reads the LM393 rain sensor directly on the rack |
+| **Weather** | Pulls Open-Meteo forecast data (temperature, humidity) and estimates whether rain is likely |
+| **Mobile** | You open or close the rack yourself from a web dashboard |
 
-I also added three operating modes:
-- **Sensor Mode:** Uses the physical rain sensor.
-- **Weather Mode:** Uses Open-Meteo weather data, including humidity and temperature, to calculate possible rain conditions.
-- **Mobile Mode:** Lets me control the rack manually through a web dashboard.
+The dashboard is hosted by the ESP32 itself, so there is no app to install. Any phone browser will do.
 
-The dashboard runs on the ESP32 and can be opened using a phone. But what hardware makes this possible?
+---
 
-## 🔩 What I used
+## Parts List
 
 - ESP32 development board
-- LM393 digital rain sensor
-- MG90S servo motor
-- External regulated 5V power supply
-- Connecting wires
-- Extended cloth rack mechanism
-- 470–1000 µF capacitor (recommended for servo power stability)
+- LM393 digital rain sensor module
+- MG90S micro servo
+- Regulated external 5V supply
+- 470 to 1000 µF capacitor (smooths out servo current spikes)
+- Jumper wires
+- A pull-out clothes rack mechanism
 
-## 🔌 How I wired it
+---
 
-| Component | ESP32 connection |
+## Wiring
+
+| From | To |
 |---|---|
-| Rain sensor VCC | 5V |
-| Rain sensor GND | GND |
+| Rain sensor VCC | ESP32 5V |
+| Rain sensor GND | ESP32 GND |
 | Rain sensor DO | GPIO 27 |
 | Servo signal | GPIO 13 |
-| Servo VCC | External 5V |
-| Servo GND | Common GND |
+| Servo power | External 5V supply |
+| Servo ground | Shared ground |
 
-I powered the servo separately instead of relying on the ESP32's power output. Both grounds must be connected together. That small detail matters more than I initially expected.
+**Important:** the servo gets its own 5V supply, and that supply's ground must be tied to the ESP32's ground. Without a common ground the servo signal has no reference and behaves erratically. Placing the capacitor across the servo's power lines also helps.
 
-## 🎛️ Getting it running
+---
 
-1. Install Arduino IDE and configure the ESP32 board package.
-2. Install the ESP32Servo and ArduinoJson libraries.
-3. Open the RainShield source code.
-4. Configure your home Wi-Fi credentials and weather location.
-5. Select the correct ESP32 board and COM port.
-6. Upload the program.
-7. Connect your phone to the ESP32 access point and open `http://192.168.4.1`.
+## Setup
 
-Keep private Wi-Fi credentials out of your public GitHub repository. There's one problem I had to work through before everything behaved properly.
+1. Install the Arduino IDE and add ESP32 board support.
+2. Add the **ESP32Servo** and **ArduinoJson** libraries from the Library Manager.
+3. Open the RainShield sketch.
+4. Enter your Wi-Fi details and your location (used for the weather lookup).
+5. Choose your ESP32 board and the correct COM port, then upload.
+6. On your phone, join the ESP32's Wi-Fi access point and browse to `http://192.168.4.1`.
 
-## 🧪 The bug that almost broke me
+> Do not commit your real Wi-Fi name or password to a public repository. Use placeholders in anything you publish.
 
-The servo sometimes refused to respond consistently. I had to investigate both power stability and the control logic. I improved the servo command handling so it resends its position when a command arrives, even if the software believes it is already there. I also kept the servo attached while idle to help it hold its position.
+---
 
-After testing and corrections, the complete system is now functional.
+## Troubleshooting Notes
 
-## 🧭 What I'd add next
+**Servo responded unpredictably.** Early on, the servo would sometimes ignore commands. Two causes turned out to matter:
 
-I'd like to improve the mechanical design, make the rack more suitable for heavier clothes, and explore additional weather-based decisions and remote monitoring.
+- **Power:** the servo was drawing more than the board could supply cleanly, hence the separate 5V supply and capacitor.
+- **Software:** the code skipped commands when it thought the servo was already in position. It now re-sends the target angle every time a command arrives, and the servo stays attached while idle so it holds its position.
 
-## 🪴 Give it a try
+With both fixes in place, the rack works reliably.
 
-This project started with a simple problem at home and turned into a working ESP32-based automation system. Feel free to explore the code, build your own version, or share suggestions. I'd be glad to hear what you come up with!
-```
+---
+
+## Future Improvements
+
+- A sturdier mechanical design that can carry heavier loads
+- Smarter weather-based decision rules
+- Remote monitoring from outside the home network
+
+---
+
+## Contributing
+
+Ideas, forks and suggestions are all welcome. If you build your own version, I'd like to see it.
